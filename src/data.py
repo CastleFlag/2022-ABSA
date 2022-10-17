@@ -1,6 +1,7 @@
 import pandas as pd
 import torch
 from torch import tensor
+import torch.nn.functional as F
 from model import MyTokenizer
 from utils import jsonlload
 from torch.utils.data import DataLoader, Dataset, TensorDataset
@@ -28,17 +29,17 @@ class MyDataset(Dataset):
 
 polarity_count = 0
 entity_property_count = 0
-label_id_to_name = ['True', 'False']
-label_name_to_id = {label_id_to_name[i]: i for i in range(len(label_id_to_name))}
 
 polarity_id_to_name = ['positive', 'negative', 'neutral']
 polarity_name_to_id = {polarity_id_to_name[i]: i for i in range(len(polarity_id_to_name))}
 
-entity_property_pair = [
-    '제품 전체#일반', '제품 전체#가격', '제품 전체#디자인', '제품 전체#품질', '제품 전체#편의성', '제품 전체#인지도',
-    '본품#일반', '본품#디자인', '본품#품질', '본품#편의성', '본품#다양성',
-    '패키지/구성품#일반', '패키지/구성품#디자인', '패키지/구성품#품질', '패키지/구성품#편의성', '패키지/구성품#다양성',
-    '브랜드#일반', '브랜드#가격', '브랜드#디자인', '브랜드#품질', '브랜드#인지도']
+entity_property_pair =[
+    '제품 전체#품질', '패키지/구성품#디자인', '본품#일반', '제품 전체#편의성', 
+    '본품#다양성', '제품 전체#디자인', '패키지/구성품#가격', '본품#품질', '브랜드#인지도', 
+    '제품 전체#일반', '브랜드#일반', '패키지/구성품#다양성', 
+    '패키지/구성품#일반', '본품#인지도', '제품 전체#가격', '본품#편의성', '패키지/구성품#편의성', 
+    '본품#디자인', '브랜드#디자인', '본품#가격', '브랜드#품질', '제품 전체#인지도', '패키지/구성품#품질', 
+    '제품 전체#다양성', '브랜드#가격']
 entity_name_to_id = {entity_property_pair[i]: i for i in range(len(entity_property_pair))}
  
 
@@ -56,49 +57,26 @@ def tokenize_and_align_labels(tokenizer, form, annotations, max_len, trainortest
         'attention_mask': [],
         'label': []
     }
+    tokenized_data = tokenizer(form, padding='max_length', max_length=max_len, truncation=True)
+    for annotation in annotations:
+        entity_property = annotation[0]
+        polarity = annotation[2]
 
-    if trainortest == 'train':
-        for pair in entity_property_pair:
-            isPairInOpinion = False
-            if pd.isna(form):
-                break
-            tokenized_data = tokenizer(form, padding='max_length', max_length=max_len, truncation=True)
-            for annotation in annotations:
-                entity_property = annotation[0]
-                polarity = annotation[2]
+        if polarity == '------------':
+            continue
 
-                # # 데이터가 =로 시작하여 수식으로 인정된경우
-                # if pd.isna(entity) or pd.isna(property):
-                #     continue
-
-                if polarity == '------------':
-                    continue
-
-                if entity_property == pair:
-                    polarity_count += 1
-                    entity_property_data_dict['input_ids'].append(tokenized_data['input_ids'])
-                    entity_property_data_dict['attention_mask'].append(tokenized_data['attention_mask'])
-                    entity_property_data_dict['label'].append(entity_name_to_id[entity_property])
-
-                    polarity_data_dict['input_ids'].append(tokenized_data['input_ids'])
-                    polarity_data_dict['attention_mask'].append(tokenized_data['attention_mask'])
-                    polarity_data_dict['label'].append(polarity_name_to_id[polarity])
-
-                    isPairInOpinion = True
-                    break
-    else:
-        tokenized_data = tokenizer(form, padding='max_length', max_length=max_len, truncation=True)
-        polarity_count += 1
         entity_property_data_dict['input_ids'].append(tokenized_data['input_ids'])
         entity_property_data_dict['attention_mask'].append(tokenized_data['attention_mask'])
-        entity_property_data_dict['label'].append(0)
 
         polarity_data_dict['input_ids'].append(tokenized_data['input_ids'])
         polarity_data_dict['attention_mask'].append(tokenized_data['attention_mask'])
-        polarity_data_dict['label'].append(0)
-
+        if trainortest == 'train':
+            entity_property_data_dict['label'].append(entity_name_to_id[entity_property])
+            polarity_data_dict['label'].append(polarity_name_to_id[polarity])
+        else:
+            entity_property_data_dict['label'].append(0)
+            polarity_data_dict['label'].append(0)
     return entity_property_data_dict, polarity_data_dict
-
 
 def get_dataset(raw_data, tokenizer, max_len, trainortest):
     entity_input_ids_list = []

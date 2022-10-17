@@ -34,10 +34,10 @@ def train(opt, device):
 
     print('loading model')
     if opt.train_target == 'Entity':
-        model = MyClassifier(opt, 25, len(tokenizer))
+        model = MyClassifier(opt, opt.num_labels, len(tokenizer))
         # model = AutoModelForSequenceClassification.from_pretrained(opt.base_model, num_labels=25)
     else:
-        model = MyClassifier(opt, 3, len(tokenizer))
+        model = MyClassifier(opt, opt.num_labels, len(tokenizer))
         # model = AutoModelForSequenceClassification.from_pretrained(opt.base_model, num_labels=3)
     model.to(device)
     print('end loading')
@@ -63,10 +63,8 @@ def train(opt, device):
 
     for epoch in tqdm(range(epochs)):
         model.train()
-        # entity_property train
         total_loss = 0
         for step, batch in tqdm(enumerate(dataloader), total=len(dataloader)):
-        # for step, batch in enumerate(dataloader):
             batch = tuple(t.to(device) for t in batch)
             b_input_ids, b_input_mask, b_labels = batch
             model.zero_grad()
@@ -107,8 +105,9 @@ def train(opt, device):
                 predictions = torch.argmax(logits, dim=-1)
                 pred_list.extend(predictions)
                 label_list.extend(b_labels)
-
-            evaluation(label_list, pred_list, len(label_id_to_name))
+            print(label_list)
+            print(pred_list)
+            evaluation(label_list, pred_list, opt.num_labels)
     print("training is done")
 
 if __name__ == '__main__':
@@ -122,10 +121,9 @@ if __name__ == '__main__':
     parser.add_argument( "--eps", type=float, default=1e-8)
     parser.add_argument( "--do_train", action="store_true")
     parser.add_argument( "--do_eval", type=bool, default=True)
-    # parser.add_argument( "--do_test", action="store_true")
     parser.add_argument( "--num_train_epochs", type=int, default=10)
-    # parser.add_argument( "--base_model", type=str, default="monologg/kobert")
     parser.add_argument( "--base_model", type=str, default="skt/kobert-base-v1")
+    parser.add_argument( "--num_labels", type=int, default=25)
     parser.add_argument( "--entity_model_path", type=str, default="./saved_models/entity_model/")
     parser.add_argument( "--polarity_model_path", type=str, default="./saved_models/polarity_model/")
     parser.add_argument( "--output_dir", type=str, default="./output/default_path/")
