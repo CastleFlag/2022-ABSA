@@ -5,5 +5,6 @@ python sentiment_analysis.py \
   --entity_property_model_path ../saved_model/category_extraction/saved_model_epoch_9.pt \
   --polarity_model_path ../saved_model/polarity_classification/saved_model_epoch_0.pt \
   --batch_size 8 \
-  --max_len 256
+  --max_len 256 \
+  --mode test
   # --test_data ../data/nikluge-sa-2022-test.jsonl \
