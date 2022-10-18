@@ -10,61 +10,111 @@ from utils import jsondump
 special_tokens_dict = {
 'additional_special_tokens': ['&name&', '&affiliation&', '&social-security-num&', '&tel-num&', '&card-num&', '&bank-account&', '&num&', '&online-account&']
 }
-
-entity_property_pair =[
-    '제품 전체#품질', '패키지/구성품#디자인', '본품#일반', '제품 전체#편의성', 
-    '본품#다양성', '제품 전체#디자인', '패키지/ 구성품#가격', '본품#품질', '브랜드#인지도', 
-    '제품 전체#일반', '브랜드#일반', '패키지/구성품#다양성', 
-    '패키지/구성품#일반', '본품#인지도', '제품 전체#가격', '본품#편의성', '패키지/구성품#편의성', 
-    '본품#디자인', '브랜드#디자인', '본품#가격', '브랜드#품질', '제품 전체#인지도', '패키지/구성품#품질', 
-    '제품 전체#다양성', '브랜드#가격']
-entity_name_to_id = {entity_property_pair[i]: i for i in range(len(entity_property_pair))}
+entity_property_pair= [   
+        '제품 전체#일반', '제품 전체#디자인','제품 전체#가격','제품 전체#품질','제품 전체#인지도', '제품 전체#편의성','제품 전체#다양성',
+        '패키지/구성품#일반', '패키지/구성품#디자인','패키지/구성품#가격','패키지/구성품#품질''패키지/구성품#다양성', '패키지/구성품#편의성',
+        '본품#일반', '본품#디자인','본품#가격', '본품#품질','본품#다양성','본품#인지도','본품#편의성',  
+        '브랜드#일반', '브랜드#디자인', '브랜드#가격', '브랜드#품질', '브랜드#인지도']
+def entity_to_id4(annotation):
+    if annotation.startswith('제품'):
+        return 0
+    elif annotation.startswith('패키지'):
+        return 1
+    elif annotation.startswith('본품'):
+        return 2
+    elif annotation.startswith('브랜드'):
+        return 3
+def id4_to_entity(pred):
+    if pred == 0:
+        return '제품 전체#'
+    elif pred == 1:
+        return '패키지/구성품#'
+    elif pred == 2:
+        return '본품#'
+    elif pred == 3:
+        return '브랜드#'
+def entity_to_id7(annotation):
+    if annotation.endswith('일반'):
+        return 0
+    elif annotation.endswith('디자인'):
+        return 1
+    elif annotation.endswith('가격'):
+        return 2
+    elif annotation.endswith('품질'):
+        return 3
+    elif annotation.endswith('인지도'):
+        return 4
+    elif annotation.endswith('편의성'):
+        return 5
+    elif annotation.endswith('다양성'):
+        return 6
+def id7_to_entity(pred):
+    if pred == 0:
+        return '일반'
+    elif pred == 1:
+        return '디자인'
+    elif pred == 2:
+        return '가격'
+    elif pred == 3:
+        return '품질'
+    elif pred == 4:
+        return '인지도'
+    elif pred == 5:
+        return '편의성'
+    elif pred == 6:
+        return '다양성'
 
 def test(opt, device):
+    print(opt.mode)
     tokenizer = AutoTokenizer.from_pretrained(opt.base_model)
     num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
     test_data = jsonlload(opt.test_data)
 
     entity_test_dataloader, polarity_test_dataloader = create_dataloader(opt.test_data, tokenizer, opt)
     
-    model = MyClassifier(opt, 25, len(tokenizer))
-    model.load_state_dict(torch.load(opt.entity_model_path, map_location=device))
-    model.to(device)
-    model.eval()
+    model4 = MyClassifier(opt, 4, len(tokenizer))
+    model4.load_state_dict(torch.load(opt.entity4_model_path, map_location=device))
+    model4.to(device)
+    model4.eval()
+
+    model7 = MyClassifier(opt, 7, len(tokenizer))
+    model7.load_state_dict(torch.load(opt.entity7_model_path, map_location=device))
+    model7.to(device)
+    model7.eval()
 
     polarity_model = MyClassifier(opt, 3, len(tokenizer))
     polarity_model.load_state_dict(torch.load(opt.polarity_model_path, map_location=device))
     polarity_model.to(device)
     polarity_model.eval()
 
-    pred_data = predict_from_korean_form(tokenizer, model, polarity_model, copy.deepcopy(test_data))
+    pred_data = predict_from_korean_form(tokenizer, model4, model7, polarity_model, copy.deepcopy(test_data))
 
     jsondump(pred_data, './pred_data.json')
     # pred_data = jsonload('./pred_data.json')
-    print(pred_data)
-    print(test_data)
-    print('F1 result: ', evaluation_f1(test_data, pred_data))
+    # print('F1 result: ', evaluation_f1(test_data, pred_data))
 
-    pred_list = []
-    label_list = []
-    print('polarity classification result')
-    for batch in polarity_test_dataloader:
-        batch = tuple(t.to(device) for t in batch)
-        b_input_ids, b_input_mask, b_labels = batch
+    # pred_list = []
+    # label_list = []
+    # print('polarity classification result')
+    # for batch in polarity_test_dataloader:
+    #     batch = tuple(t.to(device) for t in batch)
+    #     b_input_ids, b_input_mask, b_labels = batch
 
-        with torch.no_grad():
-            loss, logits = polarity_model(b_input_ids, b_input_mask, b_labels)
+    #     with torch.no_grad():
+    #         loss, logits = polarity_model(b_input_ids, b_input_mask, b_labels)
 
-        predictions = torch.argmax(logits, dim=-1)
-        pred_list.extend(predictions)
-        label_list.extend(b_labels)
+    #     predictions = torch.argmax(logits, dim=-1)
+    #     pred_list.extend(predictions)
+    #     label_list.extend(b_labels)
 
-    evaluation(label_list, pred_list, len(polarity_id_to_name))
+    # evaluation(label_list, pred_list, len(polarity_id_to_name))
 
-def predict_from_korean_form(tokenizer, ce_model, pc_model, data):
+def predict_from_korean_form(tokenizer, ce4_model, ce7_model, pc_model, data):
 
-    ce_model.to(device)
-    ce_model.eval()
+    ce4_model.to(device)
+    ce4_model.to(device)
+    ce7_model.eval()
+    ce7_model.eval()
     count = 0
     for sentence in data:
         form = sentence['sentence_form']
@@ -77,9 +127,12 @@ def predict_from_korean_form(tokenizer, ce_model, pc_model, data):
         input_ids = torch.tensor([tokenized_data['input_ids']]).to(device)
         attention_mask = torch.tensor([tokenized_data['attention_mask']]).to(device)
         with torch.no_grad():
-            _, ce_logits = ce_model(input_ids, attention_mask)
-        ce_predictions = torch.argmax(ce_logits, dim = -1)
-        ce_result = entity_property_pair[ce_predictions[0]]
+            _, ce4_logits = ce4_model(input_ids, attention_mask)
+            _, ce7_logits = ce7_model(input_ids, attention_mask)
+        ce4_predictions = torch.argmax(ce4_logits, dim = -1)
+        ce4_result = id4_to_entity(ce4_predictions[0])
+        ce7_predictions = torch.argmax(ce7_logits, dim = -1)
+        ce7_result = id7_to_entity(ce7_predictions[0])
 
         # if ce_result == 'True':
         with torch.no_grad():
@@ -88,39 +141,24 @@ def predict_from_korean_form(tokenizer, ce_model, pc_model, data):
         pc_predictions = torch.argmax(pc_logits, dim=-1)
         pc_result = polarity_id_to_name[pc_predictions[0]]
 
-        sentence['annotation'].append([ce_result, pc_result])
+        sentence['annotation'].append([ce4_result+ce7_result, pc_result])
     return data
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument( "--train_target", type=str, default="Entity", help="train entity or polarity")
-    parser.add_argument( "--train_data", type=str, default="../data/nikluge-sa-2022-train.jsonl", help="train file")
     parser.add_argument( "--test_data", type=str, default="../data/nikluge-sa-2022-test.jsonl", help="test file")
-    parser.add_argument( "--dev_data", type=str, default="../data/inikluge-sa-2022-dev.jsonl", help="dev file")
     parser.add_argument( "--batch_size", type=int, default=8) 
-    parser.add_argument( "--learning_rate", type=float, default=3e-5) 
-    parser.add_argument( "--eps", type=float, default=1e-8)
-    # parser.add_argument( "--do_train", action="store_true")
-    # parser.add_argument( "--do_eval", action="store_true")
-    parser.add_argument( "--do_test", action="store_true")
-    parser.add_argument( "--num_train_epochs", type=int, default=10)
     parser.add_argument( "--base_model", type=str, default="bert-base-multilingual-cased")
-    parser.add_argument( "--entity_model_path", type=str, default="./saved_models/entity_model/")
-    parser.add_argument( "--polarity_model_path", type=str, default="./saved_models/polarity_model/")
-    parser.add_argument( "--output_dir", type=str, default="./output/default_path/")
-    parser.add_argument( "--do_demo", action="store_true")
+    parser.add_argument( "--num_labels", type=int, default=1)
+    parser.add_argument( "--entity4_model_path", type=str, default="../saved_model/best_model/entity4.pt")
+    parser.add_argument( "--entity7_model_path", type=str, default="../saved_model/best_model/entity7.pt")
+    parser.add_argument( "--polarity_model_path", type=str, default="../saved_model/best_model/polarity.pt")
+    parser.add_argument( "--output_dir", type=str, default="../output/")
     parser.add_argument( "--max_len", type=int, default=256)
+    parser.add_argument( "--mode", type=str, default='test', help="train or test")
     parser.add_argument( "--classifier_hidden_size", type=int, default=768)
     parser.add_argument( "--classifier_dropout_prob", type=int, default=0.1, help="dropout in classifier")
-    parser.add_argument( "--mode", type=str, default='test', help="train or test")
     opt = parser.parse_args()
-    print(opt.mode)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # if opt.do_train:
-    #     train_sentiment_analysis(args)
-    # elif opt.do_demo:
-    #     demo_sentiment_analysis(args)
-    # elif opt.do_test:
-    #     test_sentiment_analysis(args)
     test(opt, device)
 

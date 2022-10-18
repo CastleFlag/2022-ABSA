@@ -74,8 +74,8 @@ def evaluation_f1(true_data, pred_data):
             if is_pipeline_found is False:
                 pipeline_eval['FP'] += 1
 
-    ce_precision = ce_eval['TP']/(ce_eval['TP']+ce_eval['FP'])
-    ce_recall = ce_eval['TP']/(ce_eval['TP']+ce_eval['FN'])
+    ce_precision = ce_eval['TP']/(ce_eval['TP']+ce_eval['FP']+1)
+    ce_recall = ce_eval['TP']/(ce_eval['TP']+ce_eval['FN']+1)
 
     ce_result = {
         'Precision': ce_precision,
@@ -83,8 +83,8 @@ def evaluation_f1(true_data, pred_data):
         'F1': 2*ce_recall*ce_precision/(ce_recall+ce_precision)
     }
 
-    pipeline_precision = pipeline_eval['TP']/(pipeline_eval['TP']+pipeline_eval['FP'])
-    pipeline_recall = pipeline_eval['TP']/(pipeline_eval['TP']+pipeline_eval['FN'])
+    pipeline_precision = pipeline_eval['TP']/(pipeline_eval['TP']+pipeline_eval['FP']+1)
+    pipeline_recall = pipeline_eval['TP']/(pipeline_eval['TP']+pipeline_eval['FN']+1)
 
     pipeline_result = {
         'Precision': pipeline_precision,

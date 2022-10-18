@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, Dataset, TensorDataset
 
 def create_dataloader(path, tokenizer, args):
     json_data = jsonlload(path)
-    entity_dataset, polarity_dataset = get_dataset(json_data, tokenizer, args.max_len, args.mode, ags.num_labels)
+    entity_dataset, polarity_dataset = get_dataset(json_data, tokenizer, args.max_len, args.mode, args.num_labels)
     return DataLoader(entity_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0), DataLoader(polarity_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0)
 
 class MyDataset(Dataset):
@@ -80,27 +80,31 @@ def tokenize_and_align_labels(tokenizer, form, annotations, max_len, trainortest
         'label': []
     }
     tokenized_data = tokenizer(form, padding='max_length', max_length=max_len, truncation=True)
-    for annotation in annotations:
-        entity_property = annotation[0]
-        polarity = annotation[2]
+    if trainortest == 'train':
+        for annotation in annotations:
+            entity_property = annotation[0]
+            polarity = annotation[2]
 
-        if polarity == '------------':
-            continue
+            if polarity == '------------':
+                continue
 
-        entity_property_data_dict['input_ids'].append(tokenized_data['input_ids'])
-        entity_property_data_dict['attention_mask'].append(tokenized_data['attention_mask'])
-
-        polarity_data_dict['input_ids'].append(tokenized_data['input_ids'])
-        polarity_data_dict['attention_mask'].append(tokenized_data['attention_mask'])
-        if trainortest == 'train':
+            entity_property_data_dict['input_ids'].append(tokenized_data['input_ids'])
+            entity_property_data_dict['attention_mask'].append(tokenized_data['attention_mask'])
             if num_labels == 4:
                 entity_property_data_dict['label'].append(entity_to_id4(entity_property))
             elif num_labels == 7:
                 entity_property_data_dict['label'].append(entity_to_id7(entity_property))
+
+            polarity_data_dict['input_ids'].append(tokenized_data['input_ids'])
+            polarity_data_dict['attention_mask'].append(tokenized_data['attention_mask'])
             polarity_data_dict['label'].append(polarity_name_to_id[polarity])
-        else:
-            entity_property_data_dict['label'].append(0)
-            polarity_data_dict['label'].append(0)
+    else:        
+        entity_property_data_dict['input_ids'].append(tokenized_data['input_ids'])
+        entity_property_data_dict['attention_mask'].append(tokenized_data['attention_mask'])
+        entity_property_data_dict['label'].append(0)
+        polarity_data_dict['input_ids'].append(tokenized_data['input_ids'])
+        polarity_data_dict['attention_mask'].append(tokenized_data['attention_mask'])
+        polarity_data_dict['label'].append(0)
     return entity_property_data_dict, polarity_data_dict
 
 def get_dataset(raw_data, tokenizer, max_len, trainortest, num_labels):
@@ -122,8 +126,8 @@ def get_dataset(raw_data, tokenizer, max_len, trainortest, num_labels):
         polarity_input_ids_list.extend(polarity_data_dict['input_ids'])
         polarity_attention_mask_list.extend(polarity_data_dict['attention_mask'])
         polarity_token_labels_list.extend(polarity_data_dict['label'])
-    print('entity_property_data_count: ', entity_property_count)
-    print('polarity_data_count: ', polarity_count)
+    # print('entity_property_data_count: ', entity_property_count)
+    # print('polarity_data_count: ', polarity_count)
 
     return MyDataset(tensor(entity_input_ids_list), tensor(entity_attention_mask_list), tensor(entity_token_labels_list)), MyDataset(tensor(polarity_input_ids_list), tensor(polarity_attention_mask_list), tensor(polarity_token_labels_list))
             

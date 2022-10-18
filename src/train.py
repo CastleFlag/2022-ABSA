@@ -13,10 +13,12 @@ special_tokens_dict = {
 }
 
 def train(opt, device):
-    if not os.path.exists(opt.entity_model_path):
-        os.makedirs(opt.entity_model_path)
-    if not os.path.exists(opt.polarity_model_path):
-        os.makedirs(opt.polarity_model_path)
+    entity_model_path = opt.entity_model_path + opt.base_model + '/' + str(opt.num_labels) + '/'
+    polarity_model_path = opt.polarity_model_path + opt.base_model + '/'
+    if not os.path.exists(entity_model_path):
+        os.makedirs(entity_model_path)
+    if not os.path.exists(polarity_model_path):
+        os.makedirs(polarity_model_path)
 
     print(opt.base_model)
     print(opt.train_target + ' ' + str(opt.num_labels))
@@ -61,10 +63,10 @@ def train(opt, device):
     #     num_training_steps=total_steps
     # )
 
-    for epoch in tqdm(range(epochs)):
+    for epoch in range(epochs):
         model.train()
         total_loss = 0
-        for step, batch in tqdm(enumerate(dataloader), total=len(dataloader)):
+        for step, batch in enumerate(dataloader):
             batch = tuple(t.to(device) for t in batch)
             b_input_ids, b_input_mask, b_labels = batch
             model.zero_grad()
@@ -84,9 +86,10 @@ def train(opt, device):
         print(f'Average train loss: {avg_train_loss}')
 
         if opt.train_target == 'Entity':
-            model_saved_path = opt.entity_model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
+            model_saved_path = entity_model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
         else:
-            model_saved_path = opt.polarity_model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
+            model_saved_path = polarity_model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
+        print(model_saved_path)
         torch.save(model.state_dict(), model_saved_path)
 
         if opt.do_eval:
@@ -124,19 +127,12 @@ if __name__ == '__main__':
     parser.add_argument( "--entity_model_path", type=str, default="./saved_models/entity_model/")
     parser.add_argument( "--polarity_model_path", type=str, default="./saved_models/polarity_model/")
     parser.add_argument( "--output_dir", type=str, default="./output/default_path/")
-    parser.add_argument( "--do_demo", action="store_true")
     parser.add_argument( "--max_len", type=int, default=256)
     parser.add_argument( "--classifier_hidden_size", type=int, default=768)
     parser.add_argument( "--classifier_dropout_prob", type=int, default=0.1, help="dropout in classifier")
     parser.add_argument( "--mode", type=str, default='train', help="train or test")
     opt = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # device = "cpu"
-    # if opt.do_train:
-    #     train_sentiment_analysis(args)
-    # elif opt.do_demo:
-    #     demo_sentiment_analysis(args)
-    # elif opt.do_test:
-    #     test_sentiment_analysis(args)
+
     train(opt, device)
 
