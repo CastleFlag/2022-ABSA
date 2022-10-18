@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, Dataset, TensorDataset
 
 def create_dataloader(path, tokenizer, args):
     json_data = jsonlload(path)
-    entity_dataset, polarity_dataset = get_dataset(json_data, tokenizer, args.max_len, args.mode)
+    entity_dataset, polarity_dataset = get_dataset(json_data, tokenizer, args.max_len, args.mode, ags.num_labels)
     return DataLoader(entity_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0), DataLoader(polarity_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0)
 
 class MyDataset(Dataset):
@@ -32,18 +32,40 @@ entity_property_count = 0
 
 polarity_id_to_name = ['positive', 'negative', 'neutral']
 polarity_name_to_id = {polarity_id_to_name[i]: i for i in range(len(polarity_id_to_name))}
+entity_property_pair= [   
+        '제품 전체#일반', '제품 전체#디자인','제품 전체#가격','제품 전체#품질','제품 전체#인지도', '제품 전체#편의성','제품 전체#다양성',
+        '패키지/구성품#일반', '패키지/구성품#디자인','패키지/구성품#가격','패키지/구성품#품질''패키지/구성품#다양성', '패키지/구성품#편의성',
+        '본품#일반', '본품#디자인','본품#가격', '본품#품질','본품#다양성','본품#인지도','본품#편의성',  
+        '브랜드#일반', '브랜드#디자인', '브랜드#가격', '브랜드#품질', '브랜드#인지도']
+def entity_to_id4(annotation):
+    if annotation.startswith('제품'):
+        return 0
+    elif annotation.startswith('패키지'):
+        return 1
+    elif annotation.startswith('본품'):
+        return 2
+    elif annotation.startswith('브랜드'):
+        return 3
 
-entity_property_pair =[
-    '제품 전체#품질', '패키지/구성품#디자인', '본품#일반', '제품 전체#편의성', 
-    '본품#다양성', '제품 전체#디자인', '패키지/구성품#가격', '본품#품질', '브랜드#인지도', 
-    '제품 전체#일반', '브랜드#일반', '패키지/구성품#다양성', 
-    '패키지/구성품#일반', '본품#인지도', '제품 전체#가격', '본품#편의성', '패키지/구성품#편의성', 
-    '본품#디자인', '브랜드#디자인', '본품#가격', '브랜드#품질', '제품 전체#인지도', '패키지/구성품#품질', 
-    '제품 전체#다양성', '브랜드#가격']
-entity_name_to_id = {entity_property_pair[i]: i for i in range(len(entity_property_pair))}
+def entity_to_id7(annotation):
+    if annotation.endswith('일반'):
+        return 0
+    elif annotation.endswith('디자인'):
+        return 1
+    elif annotation.endswith('가격'):
+        return 2
+    elif annotation.endswith('품질'):
+        return 3
+    elif annotation.endswith('인지도'):
+        return 4
+    elif annotation.endswith('편의성'):
+        return 5
+    elif annotation.endswith('다양성'):
+        return 6
+
  
 
-def tokenize_and_align_labels(tokenizer, form, annotations, max_len, trainortest):
+def tokenize_and_align_labels(tokenizer, form, annotations, max_len, trainortest, num_labels):
     global polarity_count
     global entity_property_count
 
@@ -71,14 +93,17 @@ def tokenize_and_align_labels(tokenizer, form, annotations, max_len, trainortest
         polarity_data_dict['input_ids'].append(tokenized_data['input_ids'])
         polarity_data_dict['attention_mask'].append(tokenized_data['attention_mask'])
         if trainortest == 'train':
-            entity_property_data_dict['label'].append(entity_name_to_id[entity_property])
+            if num_labels == 4:
+                entity_property_data_dict['label'].append(entity_to_id4(entity_property))
+            elif num_labels == 7:
+                entity_property_data_dict['label'].append(entity_to_id7(entity_property))
             polarity_data_dict['label'].append(polarity_name_to_id[polarity])
         else:
             entity_property_data_dict['label'].append(0)
             polarity_data_dict['label'].append(0)
     return entity_property_data_dict, polarity_data_dict
 
-def get_dataset(raw_data, tokenizer, max_len, trainortest):
+def get_dataset(raw_data, tokenizer, max_len, trainortest, num_labels):
     entity_input_ids_list = []
     entity_attention_mask_list = []
     entity_token_labels_list = []
@@ -88,7 +113,7 @@ def get_dataset(raw_data, tokenizer, max_len, trainortest):
     polarity_token_labels_list = []
     
     for utterance in raw_data:
-        entity_property_data_dict, polarity_data_dict  = tokenize_and_align_labels(tokenizer, utterance['sentence_form'], utterance['annotation'], max_len, trainortest)
+        entity_property_data_dict, polarity_data_dict  = tokenize_and_align_labels(tokenizer, utterance['sentence_form'], utterance['annotation'], max_len, trainortest, num_labels)
 
         entity_input_ids_list.extend(entity_property_data_dict['input_ids'])
         entity_attention_mask_list.extend(entity_property_data_dict['attention_mask'])

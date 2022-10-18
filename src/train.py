@@ -19,7 +19,7 @@ def train(opt, device):
         os.makedirs(opt.polarity_model_path)
 
     print(opt.base_model)
-    print(opt.train_target)
+    print(opt.train_target + ' ' + str(opt.num_labels))
     tokenizer = AutoTokenizer.from_pretrained(opt.base_model)
     num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
     # tokenizer = MyTokenizer(opt.base_model)
@@ -105,8 +105,6 @@ def train(opt, device):
                 predictions = torch.argmax(logits, dim=-1)
                 pred_list.extend(predictions)
                 label_list.extend(b_labels)
-            print(label_list)
-            print(pred_list)
             evaluation(label_list, pred_list, opt.num_labels)
     print("training is done")
 
@@ -119,7 +117,6 @@ if __name__ == '__main__':
     parser.add_argument( "--batch_size", type=int, default=8) 
     parser.add_argument( "--learning_rate", type=float, default=3e-5) 
     parser.add_argument( "--eps", type=float, default=1e-8)
-    parser.add_argument( "--do_train", action="store_true")
     parser.add_argument( "--do_eval", type=bool, default=True)
     parser.add_argument( "--num_train_epochs", type=int, default=10)
     parser.add_argument( "--base_model", type=str, default="skt/kobert-base-v1")

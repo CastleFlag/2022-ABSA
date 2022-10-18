@@ -98,26 +98,16 @@ def evaluation_f1(true_data, pred_data):
     }
     
 def evaluation(y_true, y_pred, label_len):
-    # count_list = [0]*label_len
-    # hit_list = [0]*label_len
-    # for i in range(len(y_true)):
-    #     count_list[y_true[i]] += 1
-    #     if y_true[i] == y_pred[i]:
-    #         hit_list[y_true[i]] += 1
-    # acc_list = []
+    hit_list = [0] * label_len
+    total_list = [0] * label_len
 
-    # for i in range(label_len):
-    #     acc_list.append(hit_list[i]/count_list[i])
-    total_cnt = 0
-    hit_cnt = 0
     for i in range(len(y_true)):
-        total_cnt += 1
+        total_list[y_true[i]] += 1
         if y_true[i] == y_pred[i]:
-            hit_cnt += 1
+            hit_list[y_true[i]] += 1
 
-    print(f'hit {hit_cnt}, total {total_cnt}')
-    print('accuracy: ', (hit_cnt / total_cnt))
-    # print(y_true)
+    print(f'hit {sum(hit_list)}, total {sum(total_list)}')
+    print('accuracy: ', (sum(hit_list)/ sum(total_list)))
 
     y_true = list(map(int, y_true))
     y_pred = list(map(int, y_pred))
