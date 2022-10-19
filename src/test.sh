@@ -1,9 +1,12 @@
-python test.py \
---test_data ../data/nikluge-sa-2022-dev.jsonl \
---base_model xlm-roberta-base \
---entity4_model_path ../saved_model/best_model/4.pt \
---entity7_model_path ../saved_model/best_model/7.pt \
---polarity_model_path ../saved_model/best_model/pola.pt \
---batch_size 16 \
---max_len 256 \
---mode test
+MODELS=(bert-base-multilingual-uncased koelectra-base-v3-discriminator xlm-roberta-large)
+ENTITY4_MODEL_PATH=()
+ENTITY7_MODEL_PATH=()
+POLARITY_MODEL_PATH=()
+
+for MODEL in ${MODELS[@]}
+do
+ENTITY4_BEST_PATH="../saved_model/best_model/${MODEL}_4.pt"
+ENTITY7_BEST_PATH="../saved_model/best_model/${MODEL}_7.pt"
+POLARITY_BEST_PATH="../saved_model/best_model/${MODEL}_P.pt"
+./test_M4m7.sh $MODEL $ENTITY4_BEST_PATH $ENTITY7_BEST_PATH $POLARITY_BEST_PATH
+done

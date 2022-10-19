@@ -15,6 +15,7 @@ special_tokens_dict = {
 def train(opt, device):
     entity_model_path = opt.entity_model_path + opt.base_model + '/' + str(opt.num_labels) + '/'
     polarity_model_path = opt.polarity_model_path + opt.base_model + '/'
+    output_path = opt.output_dir
     if not os.path.exists(entity_model_path):
         os.makedirs(entity_model_path)
     if not os.path.exists(polarity_model_path):
@@ -35,12 +36,7 @@ def train(opt, device):
     # entity_dev_dataloader, polarity_dev_dataloader = create_dataloader(opt.dev_data, tokenizer, opt)
 
     print('loading model')
-    if opt.train_target == 'Entity':
-        model = MyClassifier(opt, opt.num_labels, len(tokenizer))
-        # model = AutoModelForSequenceClassification.from_pretrained(opt.base_model, num_labels=25)
-    else:
-        model = MyClassifier(opt, opt.num_labels, len(tokenizer))
-        # model = AutoModelForSequenceClassification.from_pretrained(opt.base_model, num_labels=3)
+    model = MyClassifier(opt, opt.num_labels, len(tokenizer))
     model.to(device)
     print('end loading')
 
@@ -125,11 +121,10 @@ if __name__ == '__main__':
     parser.add_argument( "--num_labels", type=int, default=25)
     parser.add_argument( "--entity_model_path", type=str, default="./saved_models/entity_model/")
     parser.add_argument( "--polarity_model_path", type=str, default="./saved_models/polarity_model/")
-    parser.add_argument( "--output_dir", type=str, default="./output/default_path/")
+    parser.add_argument( "--output_dir", type=str, default="../output/")
     parser.add_argument( "--max_len", type=int, default=256)
     parser.add_argument( "--classifier_hidden_size", type=int, default=768)
     parser.add_argument( "--classifier_dropout_prob", type=int, default=0.1, help="dropout in classifier")
-    parser.add_argument( "--mode", type=str, default='train', help="train or test")
     opt = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

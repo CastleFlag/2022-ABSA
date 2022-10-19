@@ -3,7 +3,6 @@ import json
 def jsonload(fname, encoding="utf-8"):
     with open(fname, encoding=encoding) as f:
         j = json.load(f)
-
     return j
 
 # json 개체를 파일이름으로 깔끔하게 저장

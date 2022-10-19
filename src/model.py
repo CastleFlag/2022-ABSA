@@ -19,7 +19,6 @@ class SimpleClassifier(nn.Module):
         x = self.output(x)
         return x
 
-
 class MyClassifier(nn.Module):
     def __init__(self, args, num_label, len_tokenizer):
         super(MyClassifier, self).__init__()

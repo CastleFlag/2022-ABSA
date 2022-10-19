@@ -18,13 +18,11 @@ entity_property_pair= [
         '브랜드#일반', '브랜드#디자인', '브랜드#가격', '브랜드#품질', '브랜드#인지도']
 
 def test(opt, device):
-    print(opt.mode)
     print(opt.base_model)
     tokenizer = AutoTokenizer.from_pretrained(opt.base_model)
     num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
     test_data = jsonlload(opt.test_data)
 
-    entity_test_dataloader, polarity_test_dataloader = create_dataloader(opt.test_data, tokenizer, opt)
     
     model4 = MyClassifier(opt, 4, len(tokenizer))
     model4.load_state_dict(torch.load(opt.entity4_model_path, map_location=device))
@@ -50,6 +48,7 @@ def test(opt, device):
     # pred_data = jsonload('./pred_data.json')
     print('F1 result: ', evaluation_f1(test_data, pred_data))
 
+    # entity_test_dataloader, polarity_test_dataloader = create_dataloader(opt.test_data, tokenizer, opt)
     # pred_list = []
     # label_list = []
     # print('polarity classification result')
@@ -104,7 +103,7 @@ def predict_from_korean_form(tokenizer, ce4_model, ce7_model, pc_model, data):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument( "--test_data", type=str, default="../data/nikluge-sa-2022-dev.jsonl", help="test file")
-    parser.add_argument( "--base_model", type=str, default="xlm-roberta-base")
+    parser.add_argument( "--base_model", type=str, default="bert-base-multilingual-uncased")
     parser.add_argument( "--batch_size", type=int, default=8) 
     parser.add_argument( "--num_labels", type=int, default=1)
     parser.add_argument( "--entity4_model_path", type=str, default="../saved_model/best_model/4.pt")
@@ -112,7 +111,6 @@ if __name__ == '__main__':
     parser.add_argument( "--polarity_model_path", type=str, default="../saved_model/best_model/polarity.pt")
     parser.add_argument( "--output_dir", type=str, default="../output/")
     parser.add_argument( "--max_len", type=int, default=256)
-    parser.add_argument( "--mode", type=str, default='test', help="train or test")
     parser.add_argument( "--classifier_hidden_size", type=int, default=768)
     parser.add_argument( "--classifier_dropout_prob", type=int, default=0.1, help="dropout in classifier")
     opt = parser.parse_args()
