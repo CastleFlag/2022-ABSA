@@ -89,7 +89,6 @@ def train(opt, device):
             model_saved_path = entity_model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
         else:
             model_saved_path = polarity_model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
-        print(model_saved_path)
         torch.save(model.state_dict(), model_saved_path)
 
         if opt.do_eval:
@@ -116,7 +115,7 @@ if __name__ == '__main__':
     parser.add_argument( "--train_target", type=str, default="Entity", help="train entity or polarity")
     parser.add_argument( "--train_data", type=str, default="../data/nikluge-sa-2022-train.jsonl", help="train file")
     parser.add_argument( "--test_data", type=str, default="../data/nikluge-sa-2022-test.jsonl", help="test file")
-    parser.add_argument( "--dev_data", type=str, default="../data/ninikluge-sa-2022-dev.jsonl", help="dev file")
+    parser.add_argument( "--dev_data", type=str, default="../data/nikluge-sa-2022-dev.jsonl", help="dev file")
     parser.add_argument( "--batch_size", type=int, default=8) 
     parser.add_argument( "--learning_rate", type=float, default=3e-5) 
     parser.add_argument( "--eps", type=float, default=1e-8)

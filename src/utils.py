@@ -18,3 +18,51 @@ def jsonlload(fname, encoding="utf-8"):
         for line in f.readlines():
             json_list.append(json.loads(line))
     return json_list
+def entity_to_id4(annotation):
+    if annotation.startswith('제품'):
+        return 0
+    elif annotation.startswith('패키지'):
+        return 1
+    elif annotation.startswith('본품'):
+        return 2
+    elif annotation.startswith('브랜드'):
+        return 3
+def id4_to_entity(pred):
+    if pred == 0:
+        return '제품 전체#'
+    elif pred == 1:
+        return '패키지/구성품#'
+    elif pred == 2:
+        return '본품#'
+    elif pred == 3:
+        return '브랜드#'
+def entity_to_id7(annotation):
+    if annotation.endswith('일반'):
+        return 0
+    elif annotation.endswith('디자인'):
+        return 1
+    elif annotation.endswith('가격'):
+        return 2
+    elif annotation.endswith('품질'):
+        return 3
+    elif annotation.endswith('인지도'):
+        return 4
+    elif annotation.endswith('편의성'):
+        return 5
+    elif annotation.endswith('다양성'):
+        return 6
+def id7_to_entity(pred):
+    if pred == 0:
+        return '일반'
+    elif pred == 1:
+        return '디자인'
+    elif pred == 2:
+        return '가격'
+    elif pred == 3:
+        return '품질'
+    elif pred == 4:
+        return '인지도'
+    elif pred == 5:
+        return '편의성'
+    elif pred == 6:
+        return '다양성'

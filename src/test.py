@@ -5,7 +5,8 @@ from evalutation import evaluation_f1, evaluation
 from model import MyClassifier
 import copy
 from tqdm import tqdm
-from utils import jsondump
+from utils import jsondump, id4_to_entity, id7_to_entity, entity_to_id4, entity_to_id7
+from datetime import datetime
 
 special_tokens_dict = {
 'additional_special_tokens': ['&name&', '&affiliation&', '&social-security-num&', '&tel-num&', '&card-num&', '&bank-account&', '&num&', '&online-account&']
@@ -15,57 +16,10 @@ entity_property_pair= [
         '패키지/구성품#일반', '패키지/구성품#디자인','패키지/구성품#가격','패키지/구성품#품질''패키지/구성품#다양성', '패키지/구성품#편의성',
         '본품#일반', '본품#디자인','본품#가격', '본품#품질','본품#다양성','본품#인지도','본품#편의성',  
         '브랜드#일반', '브랜드#디자인', '브랜드#가격', '브랜드#품질', '브랜드#인지도']
-def entity_to_id4(annotation):
-    if annotation.startswith('제품'):
-        return 0
-    elif annotation.startswith('패키지'):
-        return 1
-    elif annotation.startswith('본품'):
-        return 2
-    elif annotation.startswith('브랜드'):
-        return 3
-def id4_to_entity(pred):
-    if pred == 0:
-        return '제품 전체#'
-    elif pred == 1:
-        return '패키지/구성품#'
-    elif pred == 2:
-        return '본품#'
-    elif pred == 3:
-        return '브랜드#'
-def entity_to_id7(annotation):
-    if annotation.endswith('일반'):
-        return 0
-    elif annotation.endswith('디자인'):
-        return 1
-    elif annotation.endswith('가격'):
-        return 2
-    elif annotation.endswith('품질'):
-        return 3
-    elif annotation.endswith('인지도'):
-        return 4
-    elif annotation.endswith('편의성'):
-        return 5
-    elif annotation.endswith('다양성'):
-        return 6
-def id7_to_entity(pred):
-    if pred == 0:
-        return '일반'
-    elif pred == 1:
-        return '디자인'
-    elif pred == 2:
-        return '가격'
-    elif pred == 3:
-        return '품질'
-    elif pred == 4:
-        return '인지도'
-    elif pred == 5:
-        return '편의성'
-    elif pred == 6:
-        return '다양성'
 
 def test(opt, device):
     print(opt.mode)
+    print(opt.base_model)
     tokenizer = AutoTokenizer.from_pretrained(opt.base_model)
     num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
     test_data = jsonlload(opt.test_data)
@@ -89,9 +43,12 @@ def test(opt, device):
 
     pred_data = predict_from_korean_form(tokenizer, model4, model7, polarity_model, copy.deepcopy(test_data))
 
-    jsondump(pred_data, './pred_data.json')
+    now = datetime.now()
+    current_time = now.strftime('%H:%M:%S')
+
+    jsondump(pred_data, './pred_data' + current_time + '.json')
     # pred_data = jsonload('./pred_data.json')
-    # print('F1 result: ', evaluation_f1(test_data, pred_data))
+    print('F1 result: ', evaluation_f1(test_data, pred_data))
 
     # pred_list = []
     # label_list = []
@@ -146,12 +103,12 @@ def predict_from_korean_form(tokenizer, ce4_model, ce7_model, pc_model, data):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument( "--test_data", type=str, default="../data/nikluge-sa-2022-test.jsonl", help="test file")
+    parser.add_argument( "--test_data", type=str, default="../data/nikluge-sa-2022-dev.jsonl", help="test file")
+    parser.add_argument( "--base_model", type=str, default="xlm-roberta-base")
     parser.add_argument( "--batch_size", type=int, default=8) 
-    parser.add_argument( "--base_model", type=str, default="bert-base-multilingual-cased")
     parser.add_argument( "--num_labels", type=int, default=1)
-    parser.add_argument( "--entity4_model_path", type=str, default="../saved_model/best_model/entity4.pt")
-    parser.add_argument( "--entity7_model_path", type=str, default="../saved_model/best_model/entity7.pt")
+    parser.add_argument( "--entity4_model_path", type=str, default="../saved_model/best_model/4.pt")
+    parser.add_argument( "--entity7_model_path", type=str, default="../saved_model/best_model/7.pt")
     parser.add_argument( "--polarity_model_path", type=str, default="../saved_model/best_model/polarity.pt")
     parser.add_argument( "--output_dir", type=str, default="../output/")
     parser.add_argument( "--max_len", type=int, default=256)

@@ -1,6 +1,6 @@
 python test.py \
 --test_data ../data/nikluge-sa-2022-dev.jsonl \
---base_model xlm-roberta-base \
+--base_model xlm-roberta-large \
 --entity4_model_path ../saved_model/best_model/4.pt \
 --entity7_model_path ../saved_model/best_model/7.pt \
 --polarity_model_path ../saved_model/best_model/pola.pt \
