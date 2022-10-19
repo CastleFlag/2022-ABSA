@@ -6,6 +6,7 @@ from data import *
 from model import MyClassifier
 from evalutation import evaluation, evaluation_f1 
 from tqdm import tqdm
+from shutil import copyfile
 import os
 
 special_tokens_dict = {
@@ -15,7 +16,7 @@ special_tokens_dict = {
 def train(opt, device):
     entity_model_path = opt.entity_model_path + opt.base_model + '/' + str(opt.num_labels) + '/'
     polarity_model_path = opt.polarity_model_path + opt.base_model + '/'
-    output_path = opt.output_dir
+    best_model_path = '../saved_model/best_model/'
     if not os.path.exists(entity_model_path):
         os.makedirs(entity_model_path)
     if not os.path.exists(polarity_model_path):
@@ -58,7 +59,8 @@ def train(opt, device):
     #     num_warmup_steps=0,
     #     num_training_steps=total_steps
     # )
-
+    min_loss = 99
+    optim_model_path = ""
     for epoch in range(epochs):
         model.train()
         total_loss = 0
@@ -86,7 +88,9 @@ def train(opt, device):
         else:
             model_saved_path = polarity_model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
         torch.save(model.state_dict(), model_saved_path)
-
+        if avg_train_loss < min_loss:
+            min_loss = avg_train_loss
+            optim_model_path = model_saved_path
         if opt.do_eval:
             model.eval()
 
@@ -104,6 +108,11 @@ def train(opt, device):
                 pred_list.extend(predictions)
                 label_list.extend(b_labels)
             evaluation(label_list, pred_list, opt.num_labels)
+    # save best model 
+    if opt.num_labels==3:
+        copyfile(optim_model_path, best_model_path + opt.base_model + '_P.pt')
+    else:
+        copyfile(optim_model_path, best_model_path + opt.base_model + '_' + str(opt.num_labels) + '.pt')
     print("training is done")
 
 if __name__ == '__main__':

@@ -44,7 +44,7 @@ def test(opt, device):
     now = datetime.now()
     current_time = now.strftime('%H:%M:%S')
 
-    jsondump(pred_data, './pred_data' + current_time + '.json')
+    jsondump(pred_data, opt.output_dir + opt.base_model + current_time + '.json')
     # pred_data = jsonload('./pred_data.json')
     print('F1 result: ', evaluation_f1(test_data, pred_data))
 

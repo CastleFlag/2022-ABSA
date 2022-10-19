@@ -28,7 +28,7 @@ python train.py \
   --num_train_epochs $EPOCHS \
   --entity_model_path $ENTITY_PATH \
   --polarity_model_path $PORALITY_PATH \
-  --output_dir $OUTPUT_PATH
+  --output_dir $OUTPUT_PATH \
   --batch_size $BATCH_SIZE \
   --max_len $MAX_LEN \
   --classifier_hidden_size $HIDDEN_SIZE \
