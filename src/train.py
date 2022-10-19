@@ -21,6 +21,8 @@ def train(opt, device):
         os.makedirs(entity_model_path)
     if not os.path.exists(polarity_model_path):
         os.makedirs(polarity_model_path)
+    if not os.path.exists(best_model_path):
+        os.makedirs(best_model_path)
 
     print(opt.base_model)
     print(opt.train_target + ' ' + str(opt.num_labels))
@@ -133,7 +135,7 @@ if __name__ == '__main__':
     parser.add_argument( "--output_dir", type=str, default="../output/")
     parser.add_argument( "--max_len", type=int, default=256)
     parser.add_argument( "--classifier_hidden_size", type=int, default=768)
-    parser.add_argument( "--classifier_dropout_prob", type=int, default=0.1, help="dropout in classifier")
+    parser.add_argument( "--classifier_dropout_prob", type=float, default=0.1, help="dropout in classifier")
     opt = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -1,8 +1,9 @@
 data/*
-
+output/*
 #cache
 __pycache__/
 *.py[cod]
+
 
 #models
 *.pt

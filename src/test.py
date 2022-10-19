@@ -42,11 +42,12 @@ def test(opt, device):
     pred_data = predict_from_korean_form(tokenizer, model4, model7, polarity_model, copy.deepcopy(test_data))
 
     now = datetime.now()
-    current_time = now.strftime('%H:%M:%S')
+    current_day = now.strftime('%m%d')
 
-    jsondump(pred_data, opt.output_dir + opt.base_model + current_time + '.json')
+    jsondump(pred_data, opt.output_dir + opt.base_model +'_'+ current_day + '.json')
+    print(opt.output_dir + opt.base_model +'_'+ current_day + '.json')
     # pred_data = jsonload('./pred_data.json')
-    print('F1 result: ', evaluation_f1(test_data, pred_data))
+    # print('F1 result: ', evaluation_f1(test_data, pred_data))
 
     # entity_test_dataloader, polarity_test_dataloader = create_dataloader(opt.test_data, tokenizer, opt)
     # pred_list = []
@@ -66,7 +67,6 @@ def test(opt, device):
     # evaluation(label_list, pred_list, len(polarity_id_to_name))
 
 def predict_from_korean_form(tokenizer, ce4_model, ce7_model, pc_model, data):
-
     ce4_model.to(device)
     ce4_model.to(device)
     ce7_model.eval()
