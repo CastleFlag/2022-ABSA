@@ -1,7 +1,7 @@
 # train entity7
 python train.py \
   --train_target Entity \
-  --train_data ../data/nikluge-sa-2022-train.jsonl \
+  --train_data ../data/nikluge-sa-2022-train_large.jsonl \
   --dev_data ../data/nikluge-sa-2022-dev.jsonl \
   --base_model xlm-roberta-large \
   --num_labels 7 \
@@ -16,7 +16,7 @@ python train.py \
 # train entity 4
 python train.py \
   --train_target Entity \
-  --train_data ../data/nikluge-sa-2022-train.jsonl \
+  --train_data ../data/nikluge-sa-2022-train_large.jsonl \
   --dev_data ../data/nikluge-sa-2022-dev.jsonl \
   --base_model xlm-roberta-large \
   --num_labels 4 \
@@ -31,7 +31,7 @@ python train.py \
 # train polarity 
 python train.py \
   --train_target Polarity \
-  --train_data ../data/nikluge-sa-2022-train.jsonl \
+  --train_data ../data/nikluge-sa-2022-train_large.jsonl \
   --dev_data ../data/nikluge-sa-2022-dev.jsonl \
   --base_model xlm-roberta-large\
   --num_labels 3 
