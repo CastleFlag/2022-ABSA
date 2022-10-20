@@ -1,4 +1,4 @@
-python test.py \
+python3 test.py \
 --test_data ../data/nikluge-sa-2022-test.jsonl \
 --base_model $1 \
 --entity4_model_path $2 \

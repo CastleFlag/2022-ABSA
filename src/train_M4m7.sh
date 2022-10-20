@@ -16,7 +16,7 @@ HIDDEN_SIZE=$2
 DROPOUT=0.1
 for ITER in 0 1 2
 do
-python train.py \
+python3 train.py \
   --train_target ${TARGETS[$ITER]} \
   --train_data $TRAIN_DATA \
   --dev_data $DEV_DATA \
