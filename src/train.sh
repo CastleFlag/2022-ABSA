@@ -1,4 +1,4 @@
-MODELS=(bert-base-multilingual-uncased koelectra-base-v3-discriminator xlm-roberta-large)
+MODELS=(bert-base-multilingual-uncased monologg/koelectra-base-v3-discriminator xlm-roberta-large)
 HIDDEN_SIZE=(768 768 1024)
 
 for ITER in 0 1 2;
