@@ -61,7 +61,7 @@ def train(opt, device):
     #     num_warmup_steps=0,
     #     num_training_steps=total_steps
     # )
-    min_loss = 99
+    min_f1 = 99
     optim_model_path = ""
     for epoch in range(epochs):
         model.train()
@@ -90,9 +90,7 @@ def train(opt, device):
         else:
             model_saved_path = polarity_model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
         torch.save(model.state_dict(), model_saved_path)
-        if avg_train_loss < min_loss:
-            min_loss = avg_train_loss
-            optim_model_path = model_saved_path
+
         if opt.do_eval:
             model.eval()
 
@@ -109,7 +107,10 @@ def train(opt, device):
                 predictions = torch.argmax(logits, dim=-1)
                 pred_list.extend(predictions)
                 label_list.extend(b_labels)
-            evaluation(label_list, pred_list, opt.num_labels)
+            f1score = evaluation(label_list, pred_list, opt.num_labels)
+            if  f1score < min_f1:
+                f1score = min_f1
+                optim_model_path = model_saved_path
     # save best model 
     if opt.num_labels==3:
         copyfile(optim_model_path, best_model_path + opt.base_model + '_P.pt')

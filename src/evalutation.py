@@ -110,7 +110,9 @@ def evaluation(y_true, y_pred, label_len):
 
     y_true = list(map(int, y_true))
     y_pred = list(map(int, y_pred))
-
+    
+    f1 = f1_score(y_true, y_pred, average=None)
     # print('f1_score: ', f1_score(y_true, y_pred, average=None))
     print('f1_score_micro: ', f1_score(y_true, y_pred, average='micro'))
     print('f1_score_macro: ', f1_score(y_true, y_pred, average='macro'))
+    return f1
