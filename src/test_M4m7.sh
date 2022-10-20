@@ -4,5 +4,6 @@ python test.py \
 --entity4_model_path $2 \
 --entity7_model_path $3 \
 --polarity_model_path $4 \
+--classifier_hidden_size $5 \
 --batch_size 16 \
 --max_len 256 
