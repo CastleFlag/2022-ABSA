@@ -6,6 +6,7 @@ from model import MyTokenizer
 from utils import jsonlload
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 from utils import id4_to_entity, id7_to_entity, entity_to_id4, entity_to_id7
+import re
 
 def create_dataloader(path, tokenizer, args):
     json_data = jsonlload(path)
@@ -46,7 +47,8 @@ def tokenize_and_align_labels(tokenizer, form, annotations, max_len, num_labels)
         'attention_mask': [],
         'label': []
     }
-    tokenized_data = tokenizer(form, padding='max_length', max_length=max_len, truncation=True)
+    sentence = re.compile('[^ 0-9A-Za-z가-힣]').sub('',form).strip()
+    tokenized_data = tokenizer(sentence, padding='max_length', max_length=max_len, truncation=True)
     # Entity has annotation
     if annotations:
         for annotation in annotations:
