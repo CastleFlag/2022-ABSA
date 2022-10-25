@@ -14,13 +14,10 @@ special_tokens_dict = {
 }
 
 def train(opt, device):
-    entity_model_path = opt.entity_model_path + opt.base_model + '/' + str(opt.num_labels) + '/'
-    polarity_model_path = opt.polarity_model_path + opt.base_model + '/'
+    model_path = opt.entity_model_path + opt.base_model.split('/')[0] + '/' 
     best_model_path = '../saved_model/best_model/'
-    if not os.path.exists(entity_model_path):
-        os.makedirs(entity_model_path)
-    if not os.path.exists(polarity_model_path):
-        os.makedirs(polarity_model_path)
+    if not os.path.exists(model_path):
+        os.makedirs(model_path)
     if not os.path.exists(best_model_path):
         os.makedirs(best_model_path)
 
@@ -28,18 +25,14 @@ def train(opt, device):
     print(opt.train_target + ' ' + str(opt.num_labels))
     tokenizer = AutoTokenizer.from_pretrained(opt.base_model)
     num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
-    # tokenizer = MyTokenizer(opt.base_model)
 
-    if opt.train_target == 'Entity':
-        dataloader, _ = create_dataloader(opt.train_data, tokenizer, opt)
-        dev_dataloader, _ = create_dataloader(opt.dev_data, tokenizer, opt)
-    else:
-        _, dataloader = create_dataloader(opt.train_data, tokenizer, opt)
-        _, dev_dataloader = create_dataloader(opt.dev_data, tokenizer, opt)
-    # entity_dev_dataloader, polarity_dev_dataloader = create_dataloader(opt.dev_data, tokenizer, opt)
+    dataloader = create_dataloader(opt.train_data, tokenizer, opt)
+    dev_dataloader = create_dataloader(opt.dev_data, tokenizer, opt)
+    # entity_dev_dataloader, polarity_dev_dataloader = create_dataloader(opt.dev_data, tokenizer, opt, True)
 
     print('loading model')
-    model = MyClassifier(opt, opt.num_labels, len(tokenizer))
+    model = BertForSequenceClassification.from_pretrained(opt.base_model, num_labels=opt.num_labels)
+    model.resize_token_embeddings(len(tokenizer))
     model.to(device)
     print('end loading')
 
@@ -66,12 +59,12 @@ def train(opt, device):
     for epoch in range(epochs):
         model.train()
         total_loss = 0
-        for step, batch in enumerate(dataloader):
-            batch = tuple(t.to(device) for t in batch)
-            b_input_ids, b_input_mask, b_labels = batch
+        for step, batch in tqdm(enumerate(dataloader), total=len(dataloader)):
+            inputs = get_inputs_dict(batch, tokenizer, device)
             model.zero_grad()
-            loss, _ = model(b_input_ids, b_input_mask, b_labels)
-
+            outputs = model(**inputs)
+            
+            loss=outputs[0]
             loss.backward()
 
             total_loss += loss.item()
@@ -85,37 +78,27 @@ def train(opt, device):
         print(f'{opt.train_target} Property_Epoch: {epoch+1}')
         print(f'Average train loss: {avg_train_loss}')
 
-        if opt.train_target == 'Entity':
-            model_saved_path = entity_model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
-        else:
-            model_saved_path = polarity_model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
+        model_saved_path = model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
         torch.save(model.state_dict(), model_saved_path)
 
         if opt.do_eval:
             model.eval()
-
             pred_list = []
             label_list = []
 
             for batch in dev_dataloader:
-                batch = tuple(t.to(device) for t in batch)
-                b_input_ids, b_input_mask, b_labels = batch
-
+                inputs = get_inputs_dict(batch, tokenizer, device)
                 with torch.no_grad():
-                    loss, logits = model(b_input_ids, b_input_mask, b_labels)
-
+                    logits = model(**inputs).logits
                 predictions = torch.argmax(logits, dim=-1)
-                pred_list.extend(predictions)
-                label_list.extend(b_labels)
+                pred_list.extend(predictions.cpu())
+                label_list.extend(inputs['labels'].cpu())
             f1score = evaluation(label_list, pred_list, opt.num_labels)
-            if  f1score < min_f1:
-                f1score = min_f1
-                optim_model_path = model_saved_path
-    # save best model 
-    if opt.num_labels==3:
-        copyfile(optim_model_path, best_model_path + opt.base_model + '_P.pt')
-    else:
-        copyfile(optim_model_path, best_model_path + opt.base_model + '_' + str(opt.num_labels) + '.pt')
+    # # save best model 
+    # if opt.num_labels==3:
+    #     copyfile(optim_model_path, best_model_path + opt.base_model + '_P.pt')
+    # else:
+    #     copyfile(optim_model_path, best_model_path + opt.base_model + '_' + str(opt.num_labels) + '.pt')
     print("training is done")
 
 if __name__ == '__main__':

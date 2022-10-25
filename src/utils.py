@@ -65,3 +65,17 @@ def id7_to_entity(pred):
         return '편의성'
     elif pred == 6:
         return '다양성'
+def simple_major(major):
+    if major== '제품 전체':
+        return '제품'
+    elif major== '패키지/구성품':
+        return '패키지'
+    return major 
+def get_inputs_dict(batch, tokenizer, device):
+    source_ids, source_mask, label = batch["source_ids"], batch["source_mask"], batch['labels']
+    inputs = {
+        "input_ids": source_ids.to(device),
+        "attention_mask": source_mask.to(device),
+        "labels": label.to(device),
+    }
+    return inputs

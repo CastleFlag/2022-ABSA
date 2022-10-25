@@ -1,12 +1,14 @@
-TARGETS=(Entity Entity Polarity)
-LABLES=(7 4 3)
+# TARGETS=(Entity Entity Polarity)
+TARGETS=(Entity)
+LABLES=(4)
+# LABLES=(7 4 3)
 TRAIN_DATA=../data/nikluge-sa-2022-train.jsonl 
 DEV_DATA=../data/nikluge-sa-2022-dev.jsonl
 BASE_MODEL=$1
 DO_EVAL=True
 LEARNING_RATE=1e-5
 EPS=1e-8
-EPOCHS=10
+EPOCHS=15
 ENTITY_PATH=../saved_model/entity/
 PORALITY_PATH=../saved_model/polarity/
 OUTPUT_PATH=../output/
@@ -14,9 +16,10 @@ BATCH_SIZE=16
 MAX_LEN=256
 HIDDEN_SIZE=$2
 DROPOUT=0.1
-for ITER in 0 1 2
+# for ITER in 0 1 2
+for ITER in 0
 do
-python3 train.py \
+python train.py \
   --train_target ${TARGETS[$ITER]} \
   --train_data $TRAIN_DATA \
   --dev_data $DEV_DATA \
