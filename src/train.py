@@ -14,15 +14,15 @@ special_tokens_dict = {
 }
 
 def train(opt, device):
-    model_path = opt.entity_model_path + opt.base_model.split('/')[0] + '/' 
-    best_model_path = '../saved_model/best_model/'
+    model_path = opt.entity_model_path + '/' + opt.base_model.split('/')[0]
+    best_model_path = '../saved_model/best_model'
     if not os.path.exists(model_path):
         os.makedirs(model_path)
     if not os.path.exists(best_model_path):
         os.makedirs(best_model_path)
 
     print(opt.base_model)
-    print(opt.train_target + ' ' + str(opt.num_labels))
+    print(f'{opt.target} {opt.num_labels}')
     tokenizer = AutoTokenizer.from_pretrained(opt.base_model)
     num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
 
@@ -47,13 +47,13 @@ def train(opt, device):
     max_grad_norm = 1.0
     total_steps = epochs * len(dataloader)
 
-    # lambda1 = lambda epoch: 0.65 ** epoch
+    lambda1 = lambda epoch: 0.95 ** epoch
     # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
-    # scheduler = get_linear_schedule_with_warmup(
-    #     optimizer,
-    #     num_warmup_steps=0,
-    #     num_training_steps=total_steps
-    # )
+    scheduler = get_linear_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=0,
+        num_training_steps=total_steps
+    )
     min_f1 = 99
     optim_model_path = ""
     for epoch in range(epochs):
@@ -72,13 +72,13 @@ def train(opt, device):
 
             # torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=max_grad_norm)
             optimizer.step()
-            # scheduler.step()
+            scheduler.step()
 
         avg_train_loss = total_loss / len(dataloader)
         print(f'{opt.train_target} Property_Epoch: {epoch+1}')
         print(f'Average train loss: {avg_train_loss}')
 
-        model_saved_path = model_path + 'saved_model_epoch_' + str(epoch+1) + '.pt'
+        model_saved_path = model_path +'/'+ opt.target + 'saved_model_epoch_' + str(epoch+1) + '.pt'
         torch.save(model.state_dict(), model_saved_path)
 
         if opt.do_eval:
@@ -94,11 +94,10 @@ def train(opt, device):
                 pred_list.extend(predictions.cpu())
                 label_list.extend(inputs['labels'].cpu())
             f1score = evaluation(label_list, pred_list, opt.num_labels)
-    # # save best model 
-    # if opt.num_labels==3:
-    #     copyfile(optim_model_path, best_model_path + opt.base_model + '_P.pt')
-    # else:
-    #     copyfile(optim_model_path, best_model_path + opt.base_model + '_' + str(opt.num_labels) + '.pt')
+            if f1score < min_f1:
+                optim_model_path = model_saved_path
+    # save best model 
+    copyfile(optim_model_path, best_model_path + +opt.target + '/major.pt')
     print("training is done")
 
 if __name__ == '__main__':
@@ -113,8 +112,9 @@ if __name__ == '__main__':
     parser.add_argument( "--do_eval", type=bool, default=True)
     parser.add_argument( "--num_train_epochs", type=int, default=10)
     parser.add_argument( "--base_model", type=str, default="skt/kobert-base-v1")
-    parser.add_argument( "--num_labels", type=int, default=25)
-    parser.add_argument( "--entity_model_path", type=str, default="./saved_models/entity_model/")
+    parser.add_argument( "--target", type=str, default="제품")
+    parser.add_argument( "--num_labels", type=int, default=2)
+    parser.add_argument( "--entity_model_path", type=str, default="./saved_models/major")
     parser.add_argument( "--polarity_model_path", type=str, default="./saved_models/polarity_model/")
     parser.add_argument( "--output_dir", type=str, default="../output/")
     parser.add_argument( "--max_len", type=int, default=256)

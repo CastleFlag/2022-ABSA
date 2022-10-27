@@ -1,6 +1,7 @@
 # TARGETS=(Entity Entity Polarity)
 TARGETS=(Entity)
-LABLES=(4)
+MAJOR_TARGET=(제품 패키지 본품 브랜드)
+LABLES=(2)
 # LABLES=(7 4 3)
 TRAIN_DATA=../data/nikluge-sa-2022-train.jsonl 
 DEV_DATA=../data/nikluge-sa-2022-dev.jsonl
@@ -16,15 +17,13 @@ BATCH_SIZE=16
 MAX_LEN=256
 HIDDEN_SIZE=$2
 DROPOUT=0.1
-# for ITER in 0 1 2
-for ITER in 0
+for ITER in 0 1 2 3
 do
 python train.py \
-  --train_target ${TARGETS[$ITER]} \
+  --target ${MAJOR_TARGET[$ITER]} \
   --train_data $TRAIN_DATA \
   --dev_data $DEV_DATA \
   --base_model $BASE_MODEL \
-  --num_labels ${LABLES[$ITER]} \
   --do_eval $DO_EVAL \
   --learning_rate $LEARNING_RATE \
   --eps $EPS \

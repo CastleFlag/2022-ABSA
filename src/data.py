@@ -73,14 +73,17 @@ def create_dataloader(path, tokenizer, opt, big=False):
     data = []
     for utterance in raw_data:
         sentence = utterance['sentence_form']
-        sentence = re.compile('[^ 0-9A-Za-z가-힣]').sub('',sentence).strip()
+        sentence = re.compile('[^ 0-9A-Za-z가-힣ㄱ-ㅎ]').sub('',sentence).strip()
         annotations = utterance['annotation']
         for annotation in annotations:
             entity = annotation[0]
             major, minor = entity.split('#')
             major = simple_major(major)
-            polarity = polarity_en_to_ko[annotation[2]]
-            data.append([sentence, major_name_to_id[major]])
+            if major == opt.target:
+                data.append([sentence, 1])
+            else:
+                data.append([sentence, 0])
+
     df = pd.DataFrame(data, columns=['input_text', 'label'])
     if not big:
         train_dataset = MyDataset(df, tokenizer, opt)
