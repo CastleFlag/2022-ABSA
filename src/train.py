@@ -1,17 +1,12 @@
 import argparse
-from transformers import AutoModel, AutoTokenizer, BertForSequenceClassification, BertTokenizer, AutoModelForSequenceClassification
-from transformers import AdamW
-from transformers import get_linear_schedule_with_warmup
-from data import *
-from model import MyClassifier
-from evalutation import evaluation, evaluation_f1 
 from tqdm import tqdm
-from shutil import copyfile
 import os
-
-special_tokens_dict = {
-'additional_special_tokens': ['&name&', '&affiliation&', '&social-security-num&', '&tel-num&', '&card-num&', '&bank-account&', '&num&', '&online-account&']
-}
+import torch
+import numpy as np
+from transformers import AutoModel, AutoTokenizer, BertForSequenceClassification, AdamW
+from data import create_dataloader, get_inputs_dict
+from evalutation import evaluation, evaluation_f1 
+from dictionaries import special_tokens_dict
 
 def train(opt, device):
     model_path = opt.entity_model_path + opt.base_model.split('/')[0] + '/' 
@@ -31,7 +26,9 @@ def train(opt, device):
     # entity_dev_dataloader, polarity_dev_dataloader = create_dataloader(opt.dev_data, tokenizer, opt, True)
 
     print('loading model')
-    model = BertForSequenceClassification.from_pretrained(opt.base_model, num_labels=opt.num_labels)
+    # model = BertForSequenceClassification.from_pretrained(opt.base_model, num_labels=opt.num_labels)
+    # model = BertForSequenceClassification.from_pretrained(opt.base_model, num_labels=opt.num_labels, problem_type="multi_label_classification")
+    model = BertForSequenceClassification.from_pretrained(opt.base_model, num_labels=opt.num_labels, problem_type="multi_label_classification")
     model.resize_token_embeddings(len(tokenizer))
     model.to(device)
     print('end loading')
@@ -61,6 +58,7 @@ def train(opt, device):
         total_loss = 0
         for step, batch in tqdm(enumerate(dataloader), total=len(dataloader)):
             inputs = get_inputs_dict(batch, tokenizer, device)
+            # print(inputs)
             model.zero_grad()
             outputs = model(**inputs)
             
@@ -90,8 +88,14 @@ def train(opt, device):
                 inputs = get_inputs_dict(batch, tokenizer, device)
                 with torch.no_grad():
                     logits = model(**inputs).logits
-                predictions = torch.argmax(logits, dim=-1)
-                pred_list.extend(predictions.cpu())
+                # predictions = torch.argmax(logits, dim=-1)
+                for logit in logits:
+                    sigmoid = torch.nn.Sigmoid()
+                    probs = sigmoid(logit.squeeze().cpu())
+                    predictions = np.zeros(probs.shape)
+                    predictions[np.where(probs >= 0.5)] = 1
+                    pred_list.append(predictions)
+                # pred_list.extend(predictions.cpu())
                 label_list.extend(inputs['labels'].cpu())
             f1score = evaluation(label_list, pred_list, opt.num_labels)
     # # save best model 

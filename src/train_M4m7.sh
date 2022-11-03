@@ -2,7 +2,9 @@
 TARGETS=(Entity)
 LABLES=(4)
 # LABLES=(7 4 3)
+# TRAIN_DATA=../data/sample.jsonl
 TRAIN_DATA=../data/nikluge-sa-2022-train.jsonl 
+# DEV_DATA=../data/sample.jsonl
 DEV_DATA=../data/nikluge-sa-2022-dev.jsonl
 BASE_MODEL=$1
 DO_EVAL=True

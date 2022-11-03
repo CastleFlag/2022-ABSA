@@ -97,22 +97,27 @@ def evaluation_f1(true_data, pred_data):
     }
     
 def evaluation(y_true, y_pred, label_len):
-    hit_list = [0] * label_len
-    total_list = [0] * label_len
+    hit = 0
+    total = 0
 
     for i in range(len(y_true)):
-        total_list[y_true[i]] += 1
-        if y_true[i] == y_pred[i]:
-            hit_list[y_true[i]] += 1
+        score = 1
+        for j in range(label_len):
+            if y_true[i][j] != y_pred[i][j]:
+                score = 0
+                break
+        hit += score
+        total += 1
+        
 
-    # print(f'hit {sum(hit_list)}, total {sum(total_list)}')
-    print('accuracy: ', (sum(hit_list)/ sum(total_list)))
+    print(f'hit {hit}, total {total}')
+    print(f'accuracy: {hit/total}') 
 
-    y_true = list(map(int, y_true))
-    y_pred = list(map(int, y_pred))
+    # y_true = list(map(int, y_true))
+    # y_pred = list(map(int, y_pred))
     
-    f1 = f1_score(y_true, y_pred, average='macro')
-    # print('f1_score: ', f1_score(y_true, y_pred, average=None))
-    print('f1_score_micro: ', f1_score(y_true, y_pred, average='micro'))
-    print('f1_score_macro: ', f1_score(y_true, y_pred, average='macro'))
-    return f1
+    # f1 = f1_score(y_true, y_pred, average='macro')
+    # # print('f1_score: ', f1_score(y_true, y_pred, average=None))
+    # print('f1_score_micro: ', f1_score(y_true, y_pred, average='micro'))
+    # print('f1_score_macro: ', f1_score(y_true, y_pred, average='macro'))
+    # return f1
